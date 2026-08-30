@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ระบบฐานข้อมูลเครือข่าย ปภ. อ.เมืองนครราชสีมา</title>
+  <title>ระบบฐานข้อมูลหน่วยงานป้องกันและบรรเทาสาธารณภัย อำเภอเมืองนครราชสีมา</title>
   
+  <!-- CSS Frameworks & Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
+  <!-- SheetJS (ส่งออก Excel) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -28,7 +30,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Touch Target Optimization for Mobile */
     .btn, .form-control, .form-select {
       min-height: var(--touch-target-size);
       font-size: 0.95rem;
@@ -53,7 +54,6 @@
       border-left: 5px solid var(--primary-color);
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      transition: transform 0.2s;
     }
 
     .res-card-img {
@@ -71,30 +71,19 @@
       display: none;
     }
 
-    /* ============================================================
-       📱 Mobile Card View Layout (เมื่อหน้าจอเล็กกว่า 768px)
-       ============================================================ */
+    /* Mobile Responsive Layout (Card View) */
     @media (max-width: 767.98px) {
-      body {
-        font-size: 0.9rem;
-      }
-      #map {
-        height: 260px;
-      }
+      body { font-size: 0.9rem; }
+      #map { height: 260px; }
       
-      /* เปลี่ยนตารางเป็นรูปแบบ Card View บนมือถือ */
       .responsive-table table, 
       .responsive-table thead, 
       .responsive-table tbody, 
       .responsive-table th, 
       .responsive-table td, 
-      .responsive-table tr { 
-        display: block; 
-      }
+      .responsive-table tr { display: block; }
       
-      .responsive-table thead {
-        display: none; /* ซ่อนหัวตารางบนมือถือ */
-      }
+      .responsive-table thead { display: none; }
       
       .responsive-table tr {
         background: #fff;
@@ -129,29 +118,26 @@
         padding-top: 10px !important;
       }
 
-      .responsive-table td.td-actions::before {
-        display: none;
-      }
-
-      .modal-dialog {
-        margin: 0.5rem;
-      }
+      .responsive-table td.td-actions::before { display: none; }
+      .modal-dialog { margin: 0.5rem; }
     }
   </style>
 </head>
 <body>
 
+<!-- Banner / Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-danger sticky-top shadow-sm">
   <div class="container-fluid px-3">
-    <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+    <a class="navbar-brand fw-bold d-flex align-items-center text-wrap" href="#">
       <i class="fa-solid fa-shield-halved me-2 fs-4"></i>
-      <span>ฐานข้อมูลหน่วย ปภ.อปท.อำเภอเมืองนครราชสีมา</span>
+      <span class="lh-sm">ระบบฐานข้อมูลหน่วยงานป้องกันและบรรเทาสาธารณภัย อำเภอเมืองนครราชสีมา</span>
     </a>
   </div>
 </nav>
 
 <div class="container-fluid container-xl my-3 px-2 px-sm-3">
 
+  <!-- Dashboard -->
   <div class="row g-2 g-md-3 mb-3">
     <div class="col-6 col-md-3">
       <div class="card card-stat p-2 p-md-3 bg-white">
@@ -179,25 +165,33 @@
     </div>
   </div>
 
+  <!-- แผนที่ -->
   <div class="card shadow-sm border-0 mb-3 rounded-3">
     <div class="card-header bg-white fw-bold py-2 d-flex align-items-center">
       <i class="fa-solid fa-map-location-dot me-2 text-danger fs-5"></i>
-      <span>แผนที่ตำแหน่งเครือข่าย ปภ.</span>
+      <span>แผนที่ตำแหน่งหน่วยงาน ปภ.</span>
     </div>
     <div class="card-body p-1 p-md-2">
       <div id="map"></div>
     </div>
   </div>
 
+  <!-- ตารางข้อมูล -->
   <div class="card shadow-sm border-0 mb-4 rounded-3">
     <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
       <span class="fw-bold fs-6"><i class="fa-solid fa-building me-2 text-primary"></i>รายชื่อหน่วยงานเครือข่าย</span>
       
-      <div class="d-flex gap-2 w-100 w-sm-auto justify-content-end">
-        <button class="btn btn-success btn-sm-touch fw-medium flex-fill flex-sm-grow-0" onclick="exportToExcel()">
+      <div class="d-flex flex-wrap gap-2 w-100 w-sm-auto justify-content-end">
+        <button class="btn btn-outline-secondary btn-sm-touch fw-medium" onclick="openConfigModal()">
+          <i class="fa-solid fa-gear me-1"></i>ตั้งค่า Sheet
+        </button>
+        <button class="btn btn-info text-white btn-sm-touch fw-medium" onclick="syncWithGoogleSheet()">
+          <i class="fa-solid fa-rotate me-1"></i>ซิงค์ Google Sheet
+        </button>
+        <button class="btn btn-success btn-sm-touch fw-medium" onclick="exportToExcel()">
           <i class="fa-solid fa-file-excel me-1"></i>ส่งออก Excel
         </button>
-        <button class="btn btn-primary btn-sm-touch fw-medium flex-fill flex-sm-grow-0" onclick="openAgencyModal()">
+        <button class="btn btn-primary btn-sm-touch fw-medium" onclick="openAgencyModal()">
           <i class="fa-solid fa-plus me-1"></i>เพิ่มหน่วยงาน
         </button>
       </div>
@@ -206,7 +200,7 @@
     <div class="card-body p-2 p-md-3">
       <div class="row g-2 mb-3">
         <div class="col-12 col-md-4">
-          <input type="text" id="searchInput" class="form-control" placeholder="🔍 ค้นหาชื่อหน่วยงาน..." onkeyup="filterData()">
+          <input type="text" id="searchInput" class="form-control" placeholder="🔍 ค้นหาชื่อหน่วยงาน/ผู้บริหาร..." onkeyup="filterData()">
         </div>
         <div class="col-6 col-md-4">
           <select id="typeFilter" class="form-select" onchange="filterData()">
@@ -235,9 +229,9 @@
               <th>ชื่อหน่วยงาน</th>
               <th>ประเภท</th>
               <th>ตำบล</th>
-              <th>บุคลากร</th>
-              <th>ทรัพยากร</th>
+              <th>ผู้บริหาร</th>
               <th>ผู้ประสานงาน</th>
+              <th>อุปกรณ์</th>
               <th class="text-center">จัดการ</th>
             </tr>
           </thead>
@@ -251,6 +245,7 @@
 
 </div>
 
+<!-- Modal เพิ่ม/แก้ไข หน่วยงาน -->
 <div class="modal fade" id="agencyModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
@@ -279,13 +274,23 @@
                 <option value="องค์การบริหารส่วนตำบล">องค์การบริหารส่วนตำบล</option>
                 <option value="มูลนิธิ,อาสาสมัคร">มูลนิธิ,อาสาสมัคร</option>
                 <option value="ภาคเอกชน">ภาคเอกชน</option>
-                <option value="อื่นๆ">อื่นๆ (กรอกระบุประเภท)</option>
+                <option value="อื่นๆ">อื่นๆ</option>
               </select>
             </div>
 
             <div class="col-12 d-none" id="typeOtherDiv">
-              <label class="form-label text-primary fw-semibold">ระบุประเภทหน่วยงาน (กรณีเลือกอื่นๆ)</label>
+              <label class="form-label text-primary fw-semibold">ระบุประเภทหน่วยงาน (อื่นๆ)</label>
               <input type="text" class="form-control" name="typeOther" id="typeOther">
+            </div>
+
+            <!-- เพิ่มฟิลด์ผู้บริหาร -->
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold text-primary"><i class="fa-solid fa-user-tie me-1"></i>ชื่อผู้บริหาร</label>
+              <input type="text" class="form-control" name="executiveName" placeholder="เช่น นายกเทศมนตรี / นายก อบต.">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label fw-semibold text-primary"><i class="fa-solid fa-phone me-1"></i>เบอร์โทรผู้บริหาร</label>
+              <input type="tel" class="form-control" name="executivePhone" placeholder="08X-XXX-XXXX">
             </div>
 
             <div class="col-8 col-md-8">
@@ -320,7 +325,7 @@
               <input type="tel" class="form-control" name="coordinatorPhone">
             </div>
             <div class="col-12 col-md-8">
-              <label class="form-label fw-semibold">ข้อมูลเพิ่มเติม (ความถี่วิทยุ,นามเรียกขาน,ชื่อ-เบอร์โทร ผู้บริหาร ฯลฯ)</label>
+              <label class="form-label fw-semibold">ภารกิจ / ความเชี่ยวชาญ</label>
               <textarea class="form-control" name="mission" rows="2"></textarea>
             </div>
             <div class="col-12 col-md-4">
@@ -338,6 +343,7 @@
   </div>
 </div>
 
+<!-- Modal จัดการทรัพยากร -->
 <div class="modal fade" id="resourceManageModal" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
@@ -352,13 +358,13 @@
             <i class="fa-solid fa-plus me-1"></i>เพิ่มอุปกรณ์
           </button>
         </div>
-        <div class="row g-2 g-md-3" id="resourceGrid">
-          </div>
+        <div class="row g-2 g-md-3" id="resourceGrid"></div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Modal ฟอร์มทรัพยากร -->
 <div class="modal fade" id="resourceFormModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
@@ -383,7 +389,7 @@
                 <option value="">-- เลือกประเภท --</option>
                 <option value="รถยนต์ดับเพลิง">รถยนต์ดับเพลิง</option>
                 <option value="รถยนต์บรรทุกน้ำดับเพลิง">รถยนต์บรรทุกน้ำดับเพลิง</option>
-                <option value="รถกู้ภัยประจำจุด">รถกู้ภัยเคลื่อนที่เร็ว</option>
+                <option value="รถกู้ภัยประจำจุด">รถกู้ภัยประจำจุด/เคลื่อนที่เร็ว</option>
                 <option value="รถกระเช้า/หิ้วปีก">รถกระเช้า / รถบันไดสูง</option>
                 <option value="เรือกู้ภัย/เรือท้องแบน">เรือกู้ภัย / เรือท้องแบน</option>
                 <option value="เครื่องสูบน้ำ">เครื่องสูบน้ำ / เครื่องสูบส่งระยะไกล</option>
@@ -399,12 +405,12 @@
             </div>
             <div class="col-8 col-md-8">
               <label class="form-label fw-semibold">รหัสเรียกขานวิทยุสื่อสาร</label>
-              <input type="text" class="form-control" name="radioCode" placeholder="เช่น ศูนย์นคร-01">
+              <input type="text" class="form-control" name="radioCode" placeholder="เช่น นคร-01">
             </div>
 
             <div class="col-12">
-              <label class="form-label fw-semibold">คุณลักษณะเฉพาะ (ความจุน้ำ/โฟม/แรงดัน)</label>
-              <textarea class="form-control" name="resSpec" rows="2" placeholder="เช่น จุน้ำ 6,000 ลิตร โฟม 500 ลิตร"></textarea>
+              <label class="form-label fw-semibold">คุณลักษณะเฉพาะ</label>
+              <textarea class="form-control" name="resSpec" rows="2" placeholder="เช่น จุน้ำ 6,000 ลิตร"></textarea>
             </div>
 
             <div class="col-12"><hr class="my-2"></div>
@@ -415,7 +421,7 @@
                   <i class="fa-solid fa-image me-1"></i>เลือกไฟล์ภาพ
                 </button>
                 <button type="button" class="btn btn-outline-danger btn-sm-touch" onclick="startCamera()">
-                  <i class="fa-solid fa-video me-1"></i>เปิดกล้องถ่ายภาพ
+                  <i class="fa-solid fa-video me-1"></i>เปิดกล้อง
                 </button>
                 <input type="file" id="fileInput" accept="image/*" class="d-none" onchange="handleFileSelect(event)">
               </div>
@@ -429,7 +435,6 @@
                 <img id="imagePreview" src="" style="max-height: 180px; border-radius: 8px;" class="border">
               </div>
             </div>
-
           </div>
           <div class="text-end mt-3">
             <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal" onclick="stopCamera()">ยกเลิก</button>
@@ -441,6 +446,27 @@
   </div>
 </div>
 
+<!-- Modal ตั้งค่า Google Apps Script Web App URL -->
+<div class="modal fade" id="configModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-secondary text-white">
+        <h6 class="modal-title fw-bold"><i class="fa-solid fa-link me-2"></i>ตั้งค่าการเชื่อมต่อ Google Sheet API</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-3">
+        <label class="form-label fw-semibold">Google Apps Script Web App URL</label>
+        <input type="url" id="scriptUrlInput" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+        <small class="text-muted d-block mt-1">วางลิงก์ Web App URL ที่ได้จากการ Deploy ใน Google Apps Script เพื่อให้ระบบซิงค์ข้อมูลลงใน Google Sheet</small>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="saveScriptUrl()">บันทึกการตั้งค่า</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JS Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -449,45 +475,102 @@
   let map, markersGroup;
   let activeAgencyId = null;
   let videoStream = null;
+  let scriptUrl = localStorage.getItem('gas_script_url') || '';
 
   const agencyModal = new bootstrap.Modal(document.getElementById('agencyModal'));
   const resourceManageModal = new bootstrap.Modal(document.getElementById('resourceManageModal'));
   const resourceFormModal = new bootstrap.Modal(document.getElementById('resourceFormModal'));
+  const configModal = new bootstrap.Modal(document.getElementById('configModal'));
 
   window.onload = function() {
     initMap();
-    loadLocalData();
+    if (scriptUrl) {
+      document.getElementById('scriptUrlInput').value = scriptUrl;
+      fetchFromGoogleSheet();
+    } else {
+      loadLocalData();
+    }
   };
 
-  // ดึงตำแหน่ง GPS
+  function openConfigModal() {
+    document.getElementById('scriptUrlInput').value = scriptUrl;
+    configModal.show();
+  }
+
+  function saveScriptUrl() {
+    scriptUrl = document.getElementById('scriptUrlInput').value.trim();
+    localStorage.setItem('gas_script_url', scriptUrl);
+    configModal.hide();
+    if (scriptUrl) fetchFromGoogleSheet();
+  }
+
+  // ซิงค์ดึงข้อมูลจาก Google Sheet
+  function fetchFromGoogleSheet() {
+    if (!scriptUrl) {
+      alert("กรุณากรอก Google Apps Script URL ในปุ่ม 'ตั้งค่า Sheet' ก่อนครับ");
+      openConfigModal();
+      return;
+    }
+    document.getElementById('agencyTable').innerHTML = '<tr><td colspan="7" class="text-center text-primary py-4"><span class="spinner-border spinner-border-sm me-2"></span>กำลังดึงข้อมูลจาก Google Sheet...</td></tr>';
+    
+    fetch(scriptUrl)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.agencies) {
+          rawData = data;
+          saveToLocalStorage();
+          renderApp();
+        }
+      })
+      .catch(err => {
+        console.error("Fetch error:", err);
+        alert("ไม่สามารถดึงข้อมูลจาก Google Sheet ได้ กำลังโหลดข้อมูลสำรองในเครื่อง");
+        loadLocalData();
+      });
+  }
+
+  // ส่งข้อมูลกลับไปบันทึกบน Google Sheet
+  function syncWithGoogleSheet() {
+    if (!scriptUrl) {
+      alert("กรุณากรอก Google Apps Script URL ในปุ่ม 'ตั้งค่า Sheet' ก่อนครับ");
+      openConfigModal();
+      return;
+    }
+
+    if (!confirm("คุณต้องการส่งข้อมูลทั้งหมดไปบันทึกยัง Google Sheet ใช่หรือไม่?")) return;
+
+    fetch(scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rawData)
+    })
+    .then(() => {
+      alert("ส่งข้อมูลอัปเดตไปยัง Google Sheet เรียบร้อยแล้ว!");
+    })
+    .catch(err => alert("เกิดข้อผิดพลาดในการบันทึก: " + err));
+  }
+
   function getCurrentLocation() {
     if ("geolocation" in navigator) {
       const locBtn = event.currentTarget;
       locBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-      
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude.toFixed(6);
-          const lng = position.coords.longitude.toFixed(6);
-          document.getElementById('locationInput').value = `${lat}, ${lng}`;
+        (pos) => {
+          document.getElementById('locationInput').value = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
           locBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-1"></i>ดึงพิกัด';
         },
-        (error) => {
-          alert("ไม่สามารถดึงพิกัดได้: " + error.message);
+        (err) => {
+          alert("ไม่สามารถดึงพิกัดได้: " + err.message);
           locBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs me-1"></i>ดึงพิกัด';
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
+        }
       );
-    } else {
-      alert("อุปกรณ์ไม่รองรับ GPS");
     }
   }
 
   function initMap() {
     map = L.map('map').setView([14.9799, 102.0978], 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
     markersGroup = L.layerGroup().addTo(map);
   }
 
@@ -499,29 +582,30 @@
       rawData = {
         agencies: [
           {
-            id: 'AG-1',
-            name: 'เทศบาลนครนครราชสีมา (งานป้องกันฯ)',
+            id: 'DIS-1787975027341',
+            name: 'เทศบาลนครนครราชสีมา (ส.ดพ.สุรนารายณ์)',
             type: 'เทศบาลนคร',
-            address: 'ถ.โพธิ์กลาง',
+            address: 'ถ.สุรนารายณ์',
             subdistrict: 'ในเมือง',
-            phone: '044-242000',
-            location: '14.9733, 102.0978',
-            coordinator: 'หัวหน้า ปภ.',
-            coordinatorPhone: '081-1234567',
-            personnelCount: 45,
-            mission: 'ข้อมูลเพิ่มเติม เช่น ความถี่วิทยุ, รหัสเรียกขาน, ชื่อ-เบอร์โทรผู้บริหาร, ความสามารถของทีม เป็นต้น'
+            phone: '044-255026',
+            coordinator: 'นายเฉลิมศักดิ์ จันทร์กลาง',
+            coordinatorPhone: '094-5415499',
+            location: '14.981700, 102.109003',
+            executiveName: 'นายประเสริฐ บุญชัยสุข',
+            executivePhone: '044-234567',
+            personnelCount: 13,
+            mission: 'ระงับเหตุอัคคีภัยและกู้ภัย'
           }
         ],
         resources: [
           {
-            id: 'RES-1',
-            agencyId: 'AG-1',
-            name: 'รถบรรทุกน้ำดับเพลิง 10,000 ลิตร',
-            type: 'รถยนต์บรรทุกน้ำดับเพลิง',
-            amount: 2,
-            radioCode: 'นคร 01',
-            spec: 'ความจุน้ำ 10,000 ลิตร',
-            imageData: ''
+            id: 'RES-1787976867988',
+            agencyId: 'DIS-1787975027341',
+            name: 'รถยนต์ดับเพลิง 2,000 ลิตร',
+            type: 'รถยนต์ดับเพลิง',
+            amount: 1,
+            radioCode: 'ปฉ.4',
+            spec: 'ความจุน้ำ 2,000 ลิตร น้ำยาโฟม 40 ลิตร'
           }
         ]
       };
@@ -539,17 +623,14 @@
     renderDashboard();
     renderMap(rawData.agencies);
     populateSubdistrictFilter(rawData.agencies);
-
-    if (activeAgencyId) {
-      renderResourceGrid(activeAgencyId);
-    }
+    if (activeAgencyId) renderResourceGrid(activeAgencyId);
   }
 
   function renderTable(agencies) {
     const tbody = document.getElementById('agencyTable');
     tbody.innerHTML = '';
 
-    if (agencies.length === 0) {
+    if (!agencies || agencies.length === 0) {
       tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">ไม่พบข้อมูลหน่วยงาน</td></tr>';
       return;
     }
@@ -561,13 +642,13 @@
           <td data-label="ชื่อหน่วยงาน" class="fw-bold text-primary">${item.name}</td>
           <td data-label="ประเภท"><span class="badge bg-info text-dark">${item.type}</span></td>
           <td data-label="ตำบล">${item.subdistrict}</td>
-          <td data-label="บุคลากร"><i class="fa-solid fa-users me-1"></i>${item.personnelCount || 0} คน</td>
+          <td data-label="ผู้บริหาร">${item.executiveName || '-'}<br><small class="text-muted">${item.executivePhone || ''}</small></td>
+          <td data-label="ผู้ประสานงาน">${item.coordinator || '-'}<br><small class="text-muted">${item.coordinatorPhone || item.phone || ''}</small></td>
           <td data-label="ทรัพยากร">
             <button class="btn btn-sm btn-outline-danger btn-sm-touch" onclick="openResourceManageModal('${item.id}')">
               <i class="fa-solid fa-truck-medical me-1"></i>อุปกรณ์ (${agencyResources.length})
             </button>
           </td>
-          <td data-label="ผู้ประสานงาน">${item.coordinator || '-'}<br><small class="text-muted">${item.coordinatorPhone || item.phone || ''}</small></td>
           <td class="td-actions text-center">
             <button class="btn btn-sm btn-outline-warning me-1 btn-sm-touch" onclick="editAgency('${item.id}')"><i class="fa-solid fa-pen"></i></button>
             <button class="btn btn-sm btn-outline-danger btn-sm-touch" onclick="deleteAgency('${item.id}')"><i class="fa-solid fa-trash"></i></button>
@@ -595,10 +676,9 @@
           const resCount = rawData.resources.filter(r => r.agencyId === item.id).length;
           const popupContent = `
             <strong>${item.name}</strong><br>
-            ประเภท: ${item.type}<br>
-            บุคลากร: ${item.personnelCount || 0} คน<br>
-            อุปกรณ์รวม: ${resCount} รายการ<br>
-            โทร: ${item.coordinatorPhone || item.phone || '-'}
+            ผู้บริหาร: ${item.executiveName || '-'} (${item.executivePhone || '-'})<br>
+            ผู้ประสานงาน: ${item.coordinator || '-'} (${item.coordinatorPhone || item.phone || '-'})<br>
+            บุคลากร: ${item.personnelCount || 0} คน | อุปกรณ์: ${resCount} รายการ
           `;
           L.marker([lat, lng]).addTo(markersGroup).bindPopup(popupContent);
         }
@@ -613,7 +693,6 @@
     subdistricts.forEach(s => subSelect.innerHTML += `<option value="${s}">${s}</option>`);
   }
 
-  // --- จัดการข้อมูลหน่วยงาน ---
   function openAgencyModal() {
     document.getElementById('agencyForm').reset();
     document.getElementById('agencyId').value = '';
@@ -639,6 +718,8 @@
     }
     toggleTypeOther();
 
+    form.executiveName.value = item.executiveName || '';
+    form.executivePhone.value = item.executivePhone || '';
     form.address.value = item.address || '';
     form.subdistrict.value = item.subdistrict || '';
     form.phone.value = item.phone || '';
@@ -656,14 +737,14 @@
     e.preventDefault();
     const form = e.target;
     let finalType = form.typeSelect.value;
-    if (finalType === 'อื่นๆ') {
-      finalType = 'อื่นๆ: ' + form.typeOther.value;
-    }
+    if (finalType === 'อื่นๆ') finalType = 'อื่นๆ: ' + form.typeOther.value;
 
     const agencyData = {
       id: form.id.value || 'AG-' + Date.now(),
       name: form.name.value,
       type: finalType,
+      executiveName: form.executiveName.value,
+      executivePhone: form.executivePhone.value,
       address: form.address.value,
       subdistrict: form.subdistrict.value,
       phone: form.phone.value,
@@ -674,12 +755,9 @@
       personnelCount: parseInt(form.personnelCount.value) || 0
     };
 
-    const existingIndex = rawData.agencies.findIndex(a => a.id === agencyData.id);
-    if (existingIndex >= 0) {
-      rawData.agencies[existingIndex] = agencyData;
-    } else {
-      rawData.agencies.push(agencyData);
-    }
+    const idx = rawData.agencies.findIndex(a => a.id === agencyData.id);
+    if (idx >= 0) rawData.agencies[idx] = agencyData;
+    else rawData.agencies.push(agencyData);
 
     saveToLocalStorage();
     renderApp();
@@ -687,7 +765,7 @@
   };
 
   function deleteAgency(id) {
-    if (confirm('คุณต้องการลบข้อมูลหน่วยงานนี้และทรัพยากรทั้งหมดใช่หรือไม่?')) {
+    if (confirm('คุณต้องการลบข้อมูลหน่วยงานนี้ใช่หรือไม่?')) {
       rawData.agencies = rawData.agencies.filter(a => a.id !== id);
       rawData.resources = rawData.resources.filter(r => r.agencyId !== id);
       saveToLocalStorage();
@@ -697,8 +775,7 @@
 
   function toggleTypeOther() {
     const typeSelect = document.getElementById('typeSelect').value;
-    const typeOtherDiv = document.getElementById('typeOtherDiv');
-    typeOtherDiv.classList.toggle('d-none', typeSelect !== 'อื่นๆ');
+    document.getElementById('typeOtherDiv').classList.toggle('d-none', typeSelect !== 'อื่นๆ');
   }
 
   function filterData() {
@@ -707,17 +784,17 @@
     const selectedSub = document.getElementById('subdistrictFilter').value;
 
     const filtered = rawData.agencies.filter(item => {
-      const matchName = item.name.toLowerCase().includes(search);
+      const matchSearch = item.name.toLowerCase().includes(search) || (item.executiveName && item.executiveName.toLowerCase().includes(search));
       const matchType = !selectedType || item.type.includes(selectedType);
       const matchSub = !selectedSub || item.subdistrict === selectedSub;
-      return matchName && matchType && matchSub;
+      return matchSearch && matchType && matchSub;
     });
 
     renderTable(filtered);
     renderMap(filtered);
   }
 
-  // --- จัดการทรัพยากร/อุปกรณ์ ---
+  // ทรัพยากร
   function openResourceManageModal(agencyId) {
     activeAgencyId = agencyId;
     const agency = rawData.agencies.find(a => a.id === agencyId);
@@ -811,12 +888,9 @@
       imageData: form.imageData.value
     };
 
-    const existingIndex = rawData.resources.findIndex(r => r.id === resData.id);
-    if (existingIndex >= 0) {
-      rawData.resources[existingIndex] = resData;
-    } else {
-      rawData.resources.push(resData);
-    }
+    const idx = rawData.resources.findIndex(r => r.id === resData.id);
+    if (idx >= 0) rawData.resources[idx] = resData;
+    else rawData.resources.push(resData);
 
     saveToLocalStorage();
     renderApp();
@@ -831,12 +905,8 @@
     }
   }
 
-  // --- รูปภาพและกล้องถ่ายรูป ---
-  function triggerFileInput() {
-    stopCamera();
-    document.getElementById('fileInput').click();
-  }
-
+  // รูปภาพ/กล้อง
+  function triggerFileInput() { stopCamera(); document.getElementById('fileInput').click(); }
   function handleFileSelect(e) {
     const file = e.target.files[0];
     if (file) {
@@ -852,18 +922,14 @@
 
   function startCamera() {
     const video = document.getElementById('cameraPreview');
-    const snapBtn = document.getElementById('snapBtn');
-    
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       .then(stream => {
         videoStream = stream;
         video.srcObject = stream;
         video.style.display = 'block';
-        snapBtn.classList.remove('d-none');
+        document.getElementById('snapBtn').classList.remove('d-none');
       })
-      .catch(err => {
-        alert('ไม่สามารถเปิดกล้องได้: ' + err.message);
-      });
+      .catch(err => alert('ไม่สามารถเปิดกล้องได้: ' + err.message));
   }
 
   function takeSnapshot() {
@@ -871,14 +937,12 @@
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.getContext('2d').drawImage(video, 0, 0);
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
     document.getElementById('imageData').value = dataUrl;
     document.getElementById('imagePreview').src = dataUrl;
     document.getElementById('imagePreviewContainer').style.display = 'block';
-
     stopCamera();
   }
 
@@ -887,41 +951,37 @@
       videoStream.getTracks().forEach(track => track.stop());
       videoStream = null;
     }
-    const video = document.getElementById('cameraPreview');
-    const snapBtn = document.getElementById('snapBtn');
-    video.style.display = 'none';
-    snapBtn.classList.add('d-none');
+    document.getElementById('cameraPreview').style.display = 'none';
+    document.getElementById('snapBtn').classList.add('d-none');
   }
 
-  // ============================================================
-  // 🟢 ฟังก์ชันส่งออกข้อมูลเป็นไฟล์ Excel (.xlsx)
-  // ============================================================
+  // ส่งออก Excel
   function exportToExcel() {
     if (rawData.agencies.length === 0) {
       alert("ไม่มีข้อมูลสำหรับส่งออก");
       return;
     }
 
-    // 1. แปลงข้อมูลหน่วยงานเป็น Sheet 1
-    const agencyExportData = rawData.agencies.map((a, index) => ({
-      'ลำดับ': index + 1,
+    const agencyExport = rawData.agencies.map((a, i) => ({
+      'ลำดับ': i + 1,
       'ชื่อหน่วยงาน': a.name,
       'ประเภทหน่วยงาน': a.type,
+      'ชื่อผู้บริหาร': a.executiveName || '-',
+      'เบอร์โทรผู้บริหาร': a.executivePhone || '-',
       'ที่อยู่': a.address || '-',
       'ตำบล': a.subdistrict,
-      'เบอร์โทรศัพท์หน่วยงาน': a.phone || '-',
-      'พิกัด (Lat,Lng)': a.location || '-',
-      'ผู้ประสานงาน': a.coordinator || '-',
+      'เบอร์โทรหน่วยงาน': a.phone || '-',
+      'ชื่อผู้ประสานงาน': a.coordinator || '-',
       'เบอร์ผู้ประสานงาน': a.coordinatorPhone || '-',
+      'พิกัด (Lat,Lng)': a.location || '-',
       'จำนวนบุคลากร (คน)': a.personnelCount || 0,
-      'ภารกิจ/ความเชี่ยวชาญ': a.mission || '-'
+      'ภารกิจ': a.mission || '-'
     }));
 
-    // 2. แปลงข้อมูลอุปกรณ์/ทรัพยากรเป็น Sheet 2
-    const resourceExportData = rawData.resources.map((r, index) => {
+    const resourceExport = rawData.resources.map((r, i) => {
       const agency = rawData.agencies.find(a => a.id === r.agencyId);
       return {
-        'ลำดับ': index + 1,
+        'ลำดับ': i + 1,
         'สังกัดหน่วยงาน': agency ? agency.name : '-',
         'ชื่ออุปกรณ์/ทรัพยากร': r.name,
         'ประเภท': r.type,
@@ -931,17 +991,10 @@
       };
     });
 
-    // 3. สร้าง Workbook และเพิ่ม Sheets
     const wb = XLSX.utils.book_new();
-    const wsAgencies = XLSX.utils.json_to_sheet(agencyExportData);
-    const wsResources = XLSX.utils.json_to_sheet(resourceExportData);
-
-    XLSX.utils.book_append_sheet(wb, wsAgencies, "หน่วยงานเครือข่าย");
-    XLSX.utils.book_append_sheet(wb, wsResources, "อุปกรณ์และทรัพยากร");
-
-    // 4. บันทึกเป็นไฟล์ Excel
-    const filename = `ปภ_เครือข่าย_อ_เมืองนครราชสีมา_${new Date().toISOString().slice(0,10)}.xlsx`;
-    XLSX.writeFile(wb, filename);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(agencyExport), "หน่วยงานเครือข่าย");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resourceExport), "อุปกรณ์และทรัพยากร");
+    XLSX.writeFile(wb, `ปภ_อำเภอเมืองนครราชสีมา_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 </script>
 
